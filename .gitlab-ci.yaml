@@ -1,0 +1,19 @@
+default:
+  image: python:3.12-bookworm
+  before_script:
+    - curl -sSL https://install.python-poetry.org | python3 -
+    - export PATH='$HOME/.poetry/bin:$PATH'
+    - poetry install
+
+stages:
+  - lint
+
+MyPy:
+  stage: lint
+  script:
+    - mypy --config-file setup.cfg
+
+Linter:
+  stage: lint
+  script:
+    - flake8 --config-file setup.cfg
