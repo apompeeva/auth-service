@@ -1,9 +1,8 @@
 default:
   image: python:3.12-bookworm
   before_script:
-    - pip install poetry
-    - poetry config virtualenvs.create true
-    - poetry config virtualenvs.in-project true
+    - curl --ssl-auto-client-cert https://install.python-poetry.org | python3 -
+    - export PATH='$HOME/.poetry/bin:$PATH'
     - poetry install
 
 stages:
