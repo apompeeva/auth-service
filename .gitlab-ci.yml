@@ -1,7 +1,7 @@
 default:
   image: python:3.12-bookworm
   before_script:
-    - curl --ssl https://install.python-poetry.org | python3 -
+    - python3 install-poetry.py
     - export PATH='$HOME/.poetry/bin:$PATH'
     - poetry install
 
