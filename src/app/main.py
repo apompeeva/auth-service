@@ -23,7 +23,7 @@ class AuthService:
 
     @staticmethod
     def create_token(login: str) -> str:
-        """Возвращает сгенер рованный jwt токен."""
+        """Возвращает сгенерированный jwt токен."""
         return jwt.encode(
             {
                 'username': login,
@@ -37,6 +37,9 @@ class AuthService:
     @classmethod
     def registrate_user(cls, login: str, password: str) -> str | None:
         """Регистрация пользователя."""
+        if not isinstance(login, str) or not isinstance(password, str):
+            raise TypeError('String expected.')
+
         if login in cls.users:
             return None
 
@@ -48,6 +51,8 @@ class AuthService:
     @classmethod
     def authorize_user(cls, login: str, password: str) -> str | None:
         """Авторизация пользователя."""
+        if not isinstance(login, str) or not isinstance(password, str):
+            raise TypeError('String expected.')
         if login not in cls.users:
             return None
         current_user = cls.users[login]
@@ -58,3 +63,7 @@ class AuthService:
         else:
             current_user.access_token = cls.create_token(login)
         return current_user.access_token
+
+
+print(jwt.decode(AuthService.create_token(
+    'login'), SECRET, algorithms=["HS256"]))
