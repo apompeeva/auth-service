@@ -33,6 +33,9 @@ Tests:
   script:
     - export PYTHONPATH="$PWD/src"
     - poetry run pytest src
+  rules:
+    - changes:
+        - src/*
 
 
 
