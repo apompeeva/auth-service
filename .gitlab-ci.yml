@@ -3,17 +3,34 @@ default:
   before_script:
     - curl -sSL https://install.python-poetry.org | python3 - --git https://github.com/python-poetry/poetry.git@main
     - export PATH="$HOME/.local/bin:$PATH"
-    - poetry install --no-root
+    - poetry install
 
 stages:
+  - tests
   - lint
+
 
 MyPy:
   stage: lint
   script:
     - poetry run mypy --config-file setup.cfg
+  rules:
+    - changes:
+        - src/app/*
 
 Linter:
   stage: lint
   script:
-    - poetry run flake8 --config setup.cfg
+    - poetry run flake8 --config setup.cfg src/app
+  rules:
+    - changes:
+        - src/app/*
+
+Tests:
+  stage: tests
+  script:
+    - export PYTHONPATH="$PWD/src"
+    - poetry run pytest src
+
+
+
