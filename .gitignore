@@ -123,3 +123,4 @@ helm/*/requirements.lock
 helm/*/charts
 
 .env
+.coverage
