@@ -63,7 +63,3 @@ class AuthService:
         else:
             current_user.access_token = cls.create_token(login)
         return current_user.access_token
-
-
-print(jwt.decode(AuthService.create_token(
-    'login'), SECRET, algorithms=["HS256"]))
