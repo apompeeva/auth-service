@@ -1,8 +1,13 @@
-# Настройка локального окружения
+## Структура проекта
+
+- Бизнес логика сервиса располагается в src/app/service.py
+- Тесты располагаются в src/tests/unit
+
+## Настройка локального окружения
 
 Для внесения изменений в репозиторий необходимо настроить работу внутри devcontainer-а.
 
-## MacOS / Windows
+### MacOS / Windows
 
 - Устновить [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Установить [Visual Studio Code](https://code.visualstudio.com/download)
