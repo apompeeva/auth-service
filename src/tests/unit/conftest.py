@@ -1,6 +1,6 @@
 import pytest
 import datetime
-from app.main import AuthService, User
+from app.service import AuthService, User
 import jwt
 from passlib.hash import pbkdf2_sha256
 
