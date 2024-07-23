@@ -1,5 +1,5 @@
 {
-    "name": "auth-service_pompeeva",
+    "name": "auth-service-pompeeva",
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "workspaceFolder": "/workspace",

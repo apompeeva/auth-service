@@ -2,7 +2,7 @@ version: '3'
 
 services:
   app:
-    container_name: 'auth-service_pompeeva'
+    container_name: 'auth-service-pompeeva'
     build:
       context: app/
       dockerfile: Dockerfile
