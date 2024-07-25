@@ -35,6 +35,26 @@ class AuthService:
         )
 
     @classmethod
+    def is_user_exist(cls, login: str) -> bool:
+        if login not in cls.users:
+            return False
+        return True
+
+    @classmethod
+    def is_token_exist(cls, login: str):
+        if cls.users[login].access_token is None:
+            return False
+        return True
+
+    @staticmethod
+    def is_token_expired(token: str):
+        try:
+            jwt.decode(token, SECRET, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return True
+        return False
+
+    @classmethod
     def registrate_user(cls, login: str, password: str) -> str | None:
         """Регистрация пользователя."""
         if not isinstance(login, str) or not isinstance(password, str):
@@ -53,13 +73,13 @@ class AuthService:
         """Авторизация пользователя."""
         if not isinstance(login, str) or not isinstance(password, str):
             raise TypeError('String expected.')
-        if login not in cls.users:
+        if not cls.is_user_exist(login):
             return None
-        current_user = cls.users[login]
-        if not pbkdf2_sha256.verify(password, current_user.password):
+        if not pbkdf2_sha256.verify(password, cls.users[login].password):
             return None
-        if current_user.access_token is None:
-            current_user.access_token = cls.create_token(login)
+        if cls.is_token_exist(login):
+            if cls.is_token_expired(cls.users[login].access_token):
+                cls.users[login].access_token = cls.create_token(login)
         else:
-            current_user.access_token = cls.create_token(login)
-        return current_user.access_token
+            cls.users[login].access_token = cls.create_token(login)
+        return cls.users[login].access_token
