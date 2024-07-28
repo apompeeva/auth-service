@@ -10,7 +10,7 @@ from app.config import EXPIRATION_TIME, SECRET  # type: ignore
 @dataclass
 class User:
     """Данные пользователя."""
-
+    id: int
     login: str
     password: str
     access_token: str | None = None
@@ -20,6 +20,7 @@ class AuthService:
     """Cервис авторизации."""
 
     users: dict = {}
+    token_storage: dict = {}
 
     @staticmethod
     def create_token(login: str) -> str:
@@ -41,10 +42,16 @@ class AuthService:
         return True
 
     @classmethod
-    def is_token_exist(cls, login: str):
-        if cls.users[login].access_token is None:
+    def is_token_exist(cls, user_id: int):
+        if user_id not in cls.token_storage:
             return False
         return True
+
+    @classmethod
+    def get_token(cls, user_id: int):
+        if user_id not in cls.token_storage:
+            return None
+        return cls.token_storage[user_id]
 
     @staticmethod
     def is_token_expired(token: str):
@@ -64,7 +71,8 @@ class AuthService:
             return None
 
         access_token = cls.create_token(login)
-        new_user = User(login, pbkdf2_sha256.hash(password))
+        user_id = len(cls.users) + 1
+        new_user = User(user_id, login, pbkdf2_sha256.hash(password))
         cls.users[login] = new_user
         return access_token
 
@@ -77,9 +85,11 @@ class AuthService:
             return None
         if not pbkdf2_sha256.verify(password, cls.users[login].password):
             return None
-        if cls.is_token_exist(login):
+        if cls.is_token_exist(cls.users[login].id):
             if cls.is_token_expired(cls.users[login].access_token):
                 cls.users[login].access_token = cls.create_token(login)
+                cls.token_storage[cls.users[login].id] = cls.users[login].access_token
         else:
             cls.users[login].access_token = cls.create_token(login)
+            cls.token_storage[cls.users[login].id] = cls.users[login].access_token
         return cls.users[login].access_token

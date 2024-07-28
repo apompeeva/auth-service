@@ -8,6 +8,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ..:/workspace:cached
+    network_mode: "host"
     ports:
       - '28080:8080'
     command: sleep infinity
