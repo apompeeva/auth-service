@@ -24,6 +24,25 @@ def auth_service():
                                SECRET,
                                algorithm='HS256',
                            ))
+
     auth_service.users.update({user_without_token.login: user_without_token,
                                user_with_token.login: user_with_token})
+    auth_service.token_storage.update({10: jwt.encode(
+        {
+            'username': 'user_with',
+            'exp': datetime.datetime.now(datetime.UTC)
+            + datetime.timedelta(minutes=EXPIRATION_TIME),
+        },
+        SECRET,
+        algorithm='HS256',
+    ),
+        11: jwt.encode(
+        {
+            'username': 'user_with',
+            'exp': datetime.datetime.now(datetime.UTC)
+            - datetime.timedelta(minutes=EXPIRATION_TIME),
+        },
+        SECRET,
+        algorithm='HS256',
+    )})
     return auth_service
