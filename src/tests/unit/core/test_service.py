@@ -1,5 +1,5 @@
-import pytest
 import jwt
+import pytest
 
 from app.config import EXPIRATION_TIME, SECRET  # type: ignore
 

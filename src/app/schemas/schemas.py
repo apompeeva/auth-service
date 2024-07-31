@@ -2,13 +2,13 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
+    """Данные для регистрации и автоизации пользователя."""
+
     login: str
     password: str
 
 
-class UserId(BaseModel):
-    user_id: int
-
-
 class AuthResponse(BaseModel):
+    """Токен."""
+
     access_token: str

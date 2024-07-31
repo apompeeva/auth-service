@@ -1,18 +1,19 @@
-import pytest
 import datetime
-from app.core.service import AuthService, User
+
 import jwt
+import pytest
 from passlib.hash import pbkdf2_sha256
 
 from app.config import EXPIRATION_TIME, SECRET  # type: ignore
+from app.core.service import AuthService, User
 
 
 @pytest.fixture(scope='session')
 def auth_service():
     auth_service = AuthService()
-    user_without_token = User('user_without',
+    user_without_token = User(0, 'user_without',
                               pbkdf2_sha256.hash('password123'))
-    user_with_token = User('user_with',
+    user_with_token = User(1, 'user_with',
                            pbkdf2_sha256.hash('password567'),
                            jwt.encode(
                                {

@@ -10,6 +10,7 @@ from app.config import EXPIRATION_TIME, SECRET  # type: ignore
 @dataclass
 class User:
     """Данные пользователя."""
+
     id: int
     login: str
     password: str
@@ -37,26 +38,26 @@ class AuthService:
 
     @classmethod
     def is_user_exist(cls, login: str) -> bool:
-        if login not in cls.users:
-            return False
-        return True
+        """Проверяет, существует ли юзер с таким логином."""
+        return login in cls.users
 
     @classmethod
     def is_token_exist(cls, user_id: int):
-        if user_id not in cls.token_storage:
-            return False
-        return True
+        """Проверяет есть ли для юзера токен в хранилище."""
+        return user_id in cls.token_storage
 
     @classmethod
     def get_token(cls, user_id: int):
+        """Возвращает токен по user_id."""
         if user_id not in cls.token_storage:
             return None
         return cls.token_storage[user_id]
 
     @staticmethod
     def is_token_expired(token: str):
+        """Проверяет не истек ли срок дейтвия токена."""
         try:
-            jwt.decode(token, SECRET, algorithms=["HS256"])
+            jwt.decode(token, SECRET, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             return True
         return False
@@ -83,13 +84,14 @@ class AuthService:
             raise TypeError('String expected.')
         if not cls.is_user_exist(login):
             return None
-        if not pbkdf2_sha256.verify(password, cls.users[login].password):
+        current_user = cls.users[login]
+        if not pbkdf2_sha256.verify(password, current_user.password):
             return None
-        if cls.is_token_exist(cls.users[login].id):
-            if cls.is_token_expired(cls.users[login].access_token):
+        if cls.is_token_exist(current_user.id):
+            if cls.is_token_expired(current_user.access_token):
                 cls.users[login].access_token = cls.create_token(login)
-                cls.token_storage[cls.users[login].id] = cls.users[login].access_token
+                cls.token_storage[current_user.id] = cls.users[login].access_token
         else:
             cls.users[login].access_token = cls.create_token(login)
-            cls.token_storage[cls.users[login].id] = cls.users[login].access_token
+            cls.token_storage[current_user.id] = cls.users[login].access_token
         return cls.users[login].access_token

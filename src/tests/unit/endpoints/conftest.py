@@ -3,7 +3,9 @@ from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
+
 from app.main import app
+
 
 @pytest.fixture(scope="session")
 def event_loop(request):
