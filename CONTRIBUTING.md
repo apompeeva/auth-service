@@ -1,6 +1,8 @@
 ## Структура проекта
 
-- Бизнес логика сервиса располагается в src/app/service.py
+- Бизнес логика сервиса располагается в src/app/core/service.py
+- Схемы для валидации данных в src/app/schemas/schemas.py
+- Эндпоинты в src/app/ebdpoints/endpoints.py
 - Тесты располагаются в src/tests/unit
 
 ## Настройка локального окружения
