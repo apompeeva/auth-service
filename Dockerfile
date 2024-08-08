@@ -13,6 +13,6 @@ COPY ./src/app ./app
 
 EXPOSE 8001
 
-COPY ./.env .
+RUN echo "SECRET is $SECRET" && echo "EXPIRATION_TIME is $EXPIRATION_TIME"
 
 ENTRYPOINT [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001" ]
