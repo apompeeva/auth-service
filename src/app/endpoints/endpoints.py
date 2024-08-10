@@ -45,4 +45,5 @@ async def authorize_user(user: User):
 
 @auth_router.get('/healthz/ready', status_code=status.HTTP_200_OK)
 async def health_check():
-    pass
+    """Проверка работоспособности сервиса."""
+    return 'Ok'
