@@ -41,3 +41,8 @@ async def authorize_user(user: User):
             status_code=status.HTTP_404_NOT_FOUND, detail='User not found',
         )
     return AuthResponse(access_token=token)
+
+
+@auth_router.get('/healthz/ready', status_code=status.HTTP_200_OK)
+async def health_check():
+    pass
