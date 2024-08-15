@@ -1,9 +1,13 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, UploadFile
 
 from app.core.service import AuthService
 from app.schemas.schemas import AuthResponse, User
+from app.producer.producer import producer
+from pathlib import Path
+import asyncio
 
 auth_router = APIRouter()
+UPLOAD_DIR = '/images'
 
 
 @auth_router.get('/check_token', status_code=status.HTTP_200_OK)
@@ -43,7 +47,21 @@ async def authorize_user(user: User):
     return AuthResponse(access_token=token)
 
 
-@auth_router.get('/healthz/ready', status_code=status.HTTP_200_OK)
+@auth_router.get('/healthz/ready')
 async def health_check():
     """Проверка работоспособности сервиса."""
-    return 'Ok'
+    readiness_probes = await asyncio.gather(
+        *[component for component in [producer.check_kafka()]],
+    )
+    ready = all(probe for probe in readiness_probes)
+    status_code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+    return status_code
+
+
+@auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
+async def verify_user(user_id: int, file: UploadFile):
+    file_location = Path(UPLOAD_DIR) / file.filename
+    with open(file_location, 'wb') as buffer:
+        buffer.write(await file.read())
+        await producer.send_and_wait(f'{user_id}:{file.filename}')
+        return {"message": "File saved successfully"}

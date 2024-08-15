@@ -18,6 +18,9 @@ fastapi = "^0.111.1"
 uvicorn = "^0.30.3"
 anyio = "^4.4.0"
 pytest-asyncio = "^0.23.8"
+aiokafka = "^0.11.0"
+brotlipy = "^0.7.0"
+brotli = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
