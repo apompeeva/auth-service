@@ -47,21 +47,21 @@ async def authorize_user(user: User):
     return AuthResponse(access_token=token)
 
 
-@auth_router.get('/healthz/ready')
+@auth_router.get('/healthz/ready', status_code=status.HTTP_200_OK)
 async def health_check():
     """Проверка работоспособности сервиса."""
-    readiness_probes = await asyncio.gather(
-        *[component for component in [producer.check_kafka()]],
-    )
-    ready = all(probe for probe in readiness_probes)
-    status_code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
-    return status_code
+    if not await producer.health_check():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='Service unavailable',
+        )
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
 async def verify_user(user_id: int, file: UploadFile):
+    """Верификация пользователя."""
     file_location = Path(UPLOAD_DIR) / file.filename
     with open(file_location, 'wb') as buffer:
         buffer.write(await file.read())
-        await producer.send_and_wait(f'{user_id}:{file.filename}')
+        await producer.send_and_wait(f'{user_id}:{str(file_location)}')
+        AuthService.verify_user(user_id)
         return {"message": "File saved successfully"}

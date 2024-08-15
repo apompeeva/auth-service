@@ -1,9 +1,9 @@
 from aiokafka import AIOKafkaProducer
 import asyncio
-from app.config import KAFKA_BOOTSTRAP_SERVERS, PRODUCE_TOPIC
+from app.config import KAFKA_HOST, KAFKA_PORT, PRODUCE_TOPIC
 import brotli
+import logging
 
-event_loop = asyncio.get_event_loop()  # ???
 file_encoding = "utf-8"
 file_compression_quality = 1
 
@@ -11,8 +11,7 @@ file_compression_quality = 1
 class Producer(object):
     def __init__(self):
         self.__producer = AIOKafkaProducer(
-            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-            loop=event_loop,
+            bootstrap_servers=f"{KAFKA_HOST}:{KAFKA_PORT}",
         )
         self.__produce_topic = PRODUCE_TOPIC
 
@@ -30,12 +29,12 @@ class Producer(object):
             quality=file_compression_quality,
         )
 
-    async def haelth_check(self) -> bool:
+    async def health_check(self) -> bool:
         """Checks if Kafka is available by fetching all metadata from the Kafka client."""
         try:
             await self.__producer.client.fetch_all_metadata()
         except Exception as exc:
-            pass  # logging.error(f'Kafka is not available: {exc}')
+            logging.error(f'Kafka is not available: {exc}')
         else:
             return True
         return False
@@ -43,7 +42,7 @@ class Producer(object):
     async def send_and_wait(self, message: str) -> None:
         await self.__producer.send_and_wait(
             topic=self.__produce_topic,
-            value=self.compress(message),
+            value=await self.compress(message),
         )
 
 

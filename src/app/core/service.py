@@ -15,6 +15,7 @@ class User:
     login: str
     password: str
     access_token: str | None = None
+    verified: bool = False
 
 
 class AuthService:
@@ -22,6 +23,14 @@ class AuthService:
 
     users: dict = {}
     token_storage: dict = {}
+    users_by_id: dict = {}
+
+    @classmethod
+    def verify_user(cls, user_id: int):
+        """Проставляет метку о верификации пользователя."""
+        cls.users_by_id[user_id].verified = True
+        login = cls.users_by_id[user_id].login
+        cls.users[login].verified = True
 
     @staticmethod
     def create_token(login: str) -> str:
@@ -75,6 +84,7 @@ class AuthService:
         user_id = len(cls.users) + 1
         new_user = User(user_id, login, pbkdf2_sha256.hash(password))
         cls.users[login] = new_user
+        cls.users_by_id[user_id] = new_user
         return access_token
 
     @classmethod
