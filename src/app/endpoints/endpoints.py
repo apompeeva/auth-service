@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, UploadFile
+import datetime
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, UploadFile, status
 
 from app.core.service import AuthService
-from app.schemas.schemas import AuthResponse, User
 from app.producer.producer import producer
-from pathlib import Path
-import asyncio
+from app.schemas.schemas import AuthResponse, User
 
 auth_router = APIRouter()
 UPLOAD_DIR = '/images'
@@ -52,16 +53,27 @@ async def health_check():
     """Проверка работоспособности сервиса."""
     if not await producer.health_check():
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='Service unavailable',
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='Service unavailable',
         )
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
-async def verify_user(user_id: int, file: UploadFile):
+async def verify_user(user_id: int, image_file: UploadFile):
     """Верификация пользователя."""
-    file_location = Path(UPLOAD_DIR) / file.filename
-    with open(file_location, 'wb') as buffer:
-        buffer.write(await file.read())
-        await producer.send_and_wait(f'{user_id}:{str(file_location)}')
-        AuthService.verify_user(user_id)
-        return {"message": "File saved successfully"}
+    if not AuthService.is_token_exist(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Token not exist',
+        )
+    elif AuthService.is_token_expired(AuthService.get_token(user_id)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail='User unauthorized',
+        )
+    else:
+        new_filename = '_'.join([user_id, datetime.datetime.now(), image_file.filename])
+        file_location = Path(UPLOAD_DIR) / new_filename
+        with open(file_location, 'wb') as buffer:
+            buffer.write(await image_file.read())
+            await producer.send_and_wait(f'{user_id}:{str(file_location)}')
+            AuthService.verify_user(user_id)
+            return {'message': 'File saved successfully'}
