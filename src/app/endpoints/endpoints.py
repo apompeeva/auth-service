@@ -70,7 +70,9 @@ async def verify_user(user_id: int, image_file: UploadFile):
             status_code=status.HTTP_401_UNAUTHORIZED, detail='User unauthorized',
         )
     else:
-        new_filename = '_'.join([user_id, datetime.datetime.now(), image_file.filename])
+        new_filename = '_'.join(
+            [str(user_id), str(datetime.datetime.now()), str(image_file.filename)],
+        )
         file_location = Path(UPLOAD_DIR) / new_filename
         with open(file_location, 'wb') as buffer:
             buffer.write(await image_file.read())
