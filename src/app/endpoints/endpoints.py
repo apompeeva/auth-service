@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, UploadFile
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, UploadFile, status
 
 from app.core.service import AuthService
-from app.schemas.schemas import AuthResponse, User
 from app.producer.producer import producer
-from pathlib import Path
-import asyncio
+from app.schemas.schemas import AuthResponse, User
 
 auth_router = APIRouter()
 UPLOAD_DIR = '/images'
@@ -28,7 +28,7 @@ async def check_token(user_id: int):
 )
 async def register_user(user: User):
     """Регистрация пользователя."""
-    token = AuthService.registrate_user(user.login, user.password)
+    token = await AuthService.registrate_user(user.login, user.password)
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail='User already exist',
@@ -39,7 +39,7 @@ async def register_user(user: User):
 @auth_router.post('/auth', status_code=status.HTTP_200_OK, response_model=AuthResponse)
 async def authorize_user(user: User):
     """Авторизация пользователя."""
-    token = AuthService.authorize_user(user.login, user.password)
+    token = await AuthService.authorize_user(user.login, user.password)
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail='User not found',
@@ -52,16 +52,17 @@ async def health_check():
     """Проверка работоспособности сервиса."""
     if not await producer.health_check():
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='Service unavailable',
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='Service unavailable',
         )
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
-async def verify_user(user_id: int, file: UploadFile):
+async def verify_user(user_id: int, img_file: UploadFile):
     """Верификация пользователя."""
-    file_location = Path(UPLOAD_DIR) / file.filename
+    file_location = Path(UPLOAD_DIR) / img_file.filename
     with open(file_location, 'wb') as buffer:
-        buffer.write(await file.read())
+        buffer.write(await img_file.read())
         await producer.send_and_wait(f'{user_id}:{str(file_location)}')
         AuthService.verify_user(user_id)
-        return {"message": "File saved successfully"}
+        return {'message': 'File saved successfully'}
