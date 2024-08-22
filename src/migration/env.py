@@ -1,15 +1,26 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import pool
+from sqlalchemy import pool, MetaData, Table, Column, String
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from app.database import Base
+from app.config import DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
+from app.models.user import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+section = config.config_ini_section
+config.set_section_option(section, "DB_HOST", DB_HOST)
+config.set_section_option(section, "DB_PORT", DB_PORT)
+config.set_section_option(section, "DB_USER", DB_USER)
+config.set_section_option(section, "DB_PASS", DB_PASS)
+config.set_section_option(section, "DB_NAME", DB_NAME)
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -20,7 +31,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -46,6 +57,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema='auth_schema',
     )
 
     with context.begin_transaction():
@@ -53,7 +65,8 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=connection, target_metadata=target_metadata,
+    version_table_schema=config.get_main_option("auth_schema"))
 
     with context.begin_transaction():
         context.run_migrations()
@@ -72,6 +85,13 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
+        schema_name = 'auth_schema'
+        connection.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+        metadata = MetaData(schema='auth_schema')
+        alembic_version = Table(
+            'alembic_version', metadata,
+            Column('version_num', String, primary_key=True)
+        )
         await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()

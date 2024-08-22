@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile, status
@@ -58,11 +59,23 @@ async def health_check():
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
-async def verify_user(user_id: int, img_file: UploadFile):
+async def verify_user(user_id: int, image_file: UploadFile):
     """Верификация пользователя."""
-    file_location = Path(UPLOAD_DIR) / img_file.filename
-    with open(file_location, 'wb') as buffer:
-        buffer.write(await img_file.read())
-        await producer.send_and_wait(f'{user_id}:{str(file_location)}')
-        AuthService.verify_user(user_id)
-        return {'message': 'File saved successfully'}
+    if not AuthService.is_token_exist(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail='Token not exist',
+        )
+    elif AuthService.is_token_expired(AuthService.get_token(user_id)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail='User unauthorized',
+        )
+    else:
+        new_filename = '_'.join(
+            [str(user_id), str(datetime.datetime.now()), str(image_file.filename)],
+        )
+        file_location = Path(UPLOAD_DIR) / new_filename
+        with open(file_location, 'wb') as buffer:
+            buffer.write(await image_file.read())
+            await producer.send_and_wait(f'{user_id}:{str(file_location)}')
+            AuthService.verify_user(user_id)
+            return {'message': 'File saved successfully'}
