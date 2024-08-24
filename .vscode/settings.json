@@ -12,5 +12,44 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "redhat.telemetry.enabled": false,
-    "terminal.integrated.defaultProfile.linux": "zsh"
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "local",
+            "database": "SQLpool",
+            "username": "postrgres"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "PostgreSQL 16",
+            "database": "postgres",
+            "username": "anna_pompeeva",
+            "password": "123"
+        },
+        {
+            "previewLimit": 50,
+            "server": "127.0.0.1",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "shift",
+            "database": "shift_pompeeva",
+            "username": "postgres"
+        },
+        {
+            "previewLimit": 50,
+            "server": "host.docker.internal",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "shift_pompeeva",
+            "database": "shift_pompeeva",
+            "username": "postgres"
+        }
+    ]
 }

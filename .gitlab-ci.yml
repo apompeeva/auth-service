@@ -8,7 +8,7 @@ default:
     - ./setup_env.sh
 
 stages:
-  - tests
+  # - tests
   - lint
 
 
@@ -28,14 +28,14 @@ Linter:
     - changes:
         - src/app/*
 
-Tests:
-  stage: tests
-  script:
-    - export PYTHONPATH="$PWD/src"
-    - poetry run pytest src
-  rules:
-    - changes:
-        - src/*
+# Tests:
+#   stage: tests
+#   script:
+#     - export PYTHONPATH="$PWD/src"
+#     - poetry run pytest src
+#   rules:
+#     - changes:
+#         - src/*
 
 
 

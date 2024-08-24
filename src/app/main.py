@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+import logging
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
 from app.endpoints.endpoints import auth_router
 from app.producer.producer import producer
-import logging
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
@@ -10,6 +12,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Создание продюсера перед запуском приложения и остановка после."""
     try:
         await producer.start()
         yield
