@@ -57,7 +57,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table_schema='auth_schema',
+        version_table_schema="auth_schema",
     )
 
     with context.begin_transaction():
@@ -65,8 +65,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata,
-    version_table_schema=config.get_main_option("auth_schema"))
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=config.get_main_option("auth_schema"),
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -85,13 +88,6 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
-        schema_name = 'auth_schema'
-        connection.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
-        metadata = MetaData(schema='auth_schema')
-        alembic_version = Table(
-            'alembic_version', metadata,
-            Column('version_num', String, primary_key=True)
-        )
         await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()

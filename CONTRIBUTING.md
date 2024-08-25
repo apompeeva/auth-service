@@ -21,3 +21,26 @@
 - Открыть директорию с репозиторием через Visual Studio Code
 - Установить [рекомендуемые плагины](.vscode/extensions.json) Visual Studio Code
 - Ввести `Ctrl+Shift+P` или `Cmd+Shift+P` и выбрать `Dev Containers: Rebuild and Reopen in Container`
+
+### Миграции
+
+Для наката миграций на базу данных необходимо добавить в файл .env переменные:
+```
+DB_HOST =
+DB_PORT =
+DB_NAME =
+DB_USER =
+DB_PASS =
+
+POSTGRES_DB =
+POSTGRES_USER =
+POSTGRES_PASSWORD =
+```
+Затем запустить в терминале команду:
+```sh
+$ alembic upgrade head
+```
+ВАЖНО!
+Перед накатом миграций в сервисах Transaction и FaceVerification необходимо накатить миграции из сервиса Auth.
+
+При запуске пректа через docker-compose.yaml миграции накатятся автоматически, нужно только создать файл с переменными описанными выше.

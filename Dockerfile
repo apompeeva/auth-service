@@ -16,6 +16,8 @@ EXPOSE 8001
 RUN echo "SECRET is $SECRET" && echo "EXPIRATION_TIME is $EXPIRATION_TIME"
 
 COPY ./entrypoint.sh .
+COPY ./alembic.ini  .
+COPY ./src/migration ./src/migration
 RUN chmod +x /auth/entrypoint.sh
 
 ENTRYPOINT ["sh", "/auth/entrypoint.sh"]
