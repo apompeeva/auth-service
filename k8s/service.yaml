@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-pompeeva-service
+spec:
+  ports:
+  - port: 8001
+    targetPort: 8001
+  selector:
+    app: auth-service-pompeeva

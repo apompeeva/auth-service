@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-pompeeva-deployment
+  labels:
+    app: auth-service-pompeeva
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service-pompeeva
+  template:
+    metadata:
+      labels:
+        app: auth-service-pompeeva
+    spec:
+      containers:
+      - name: auth-service-pompeeva
+        image: aipompeeva/auth-service-shift:latest
+        ports:
+        - containerPort: 8001
+        env:
+          - name: JWT_SECRET_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: secret
+          - name: JWT_EXPIRATION_TIME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: expiration_time
+          - name: KAFKA_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: kafka_host
+          - name: KAFKA_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: kafka_port
+          - name: TOPIC_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: topic
+          - name: DB_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_host
+          - name: DB_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_port
+          - name: DB_NAME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_name
+          - name: DB_USER_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_user
+          - name: DB_PASS_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_pass
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "300m"
+          requests:
+            memory: "300Mi"
+            cpu: "200m"
+        readinessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        volumeMounts:
+        - mountPath: "/images"
+          name: pompeeva-images
+      volumes:
+      - name: pompeeva-images
+        persistentVolumeClaim:
+          claimName: pompeeva-images-pvc

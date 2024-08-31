@@ -13,11 +13,10 @@ COPY ./src/app ./app
 
 EXPOSE 8001
 
-RUN echo "SECRET is $SECRET" && echo "EXPIRATION_TIME is $EXPIRATION_TIME"
+#COPY ./setup_env.sh .
+#RUN chmod +x ./setup_env.sh && ./setup_env.sh
 
-COPY ./entrypoint.sh .
 COPY ./alembic.ini  .
 COPY ./src/migration ./src/migration
-RUN chmod +x /auth/entrypoint.sh
 
-ENTRYPOINT ["sh", "/auth/entrypoint.sh"]
+ENTRYPOINT [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001" ]

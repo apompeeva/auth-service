@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migration-auth-pompeeva
+spec:
+  template:
+    spec:
+      containers:
+      - name: alembic-migration-auth-pompeeva
+        image: aipompeeva/auth-service-shift:latest
+        env:
+          - name: JWT_SECRET_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: secret
+          - name: JWT_EXPIRATION_TIME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: expiration_time
+          - name: KAFKA_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: kafka_host
+          - name: KAFKA_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: kafka_port
+          - name: TOPIC_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: topic
+          - name: DB_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_host
+          - name: DB_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_port
+          - name: DB_NAME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: auth-service-pompeeva-configmap
+                key: db_name
+          - name: DB_USER_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_user
+          - name: DB_PASS_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_pass
+        command: ["alembic", "upgrade", "head"]
+      restartPolicy: Never
+  backoffLimit: 1
