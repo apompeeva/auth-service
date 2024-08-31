@@ -59,7 +59,7 @@ async def health_check():
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
-async def verify_user(user_id: int, image_file: UploadFile):
+async def verify_user(user_id: int, file: UploadFile):
     """Верификация пользователя."""
     if not AuthService.is_token_exist(user_id):
         raise HTTPException(
@@ -71,11 +71,10 @@ async def verify_user(user_id: int, image_file: UploadFile):
         )
     else:
         new_filename = '_'.join(
-            [str(user_id), str(datetime.datetime.now()), str(image_file.filename)],
+            [str(user_id), str(datetime.datetime.now()), str(file.filename)],
         )
         file_location = Path(UPLOAD_DIR) / new_filename
         with open(file_location, 'wb') as buffer:
-            buffer.write(await image_file.read())
-            await producer.send_and_wait(f'{user_id}:{str(file_location)}')
-            AuthService.verify_user(user_id)
+            buffer.write(await file.read())
+            await producer.send_and_wait(f'{user_id}@{str(file_location)}')
             return {'message': 'File saved successfully'}
