@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auth-service-pompeeva.fullname" . }}
+  labels:
+    {{- include "auth-service-pompeeva.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "auth-service-pompeeva.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "auth-service-pompeeva.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+          - name: JWT_SECRET_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: secret
+          - name: JWT_EXPIRATION_TIME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: expiration_time
+          - name: KAFKA_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: kafka_host
+          - name: KAFKA_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: kafka_port
+          - name: TOPIC_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: topic
+          - name: DB_HOST_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: db_host
+          - name: DB_PORT_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: db_port
+          - name: DB_NAME_POMPEEVA
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: db_name
+          - name: DB_USER_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_user
+          - name: DB_PASS_POMPEEVA
+            valueFrom:
+              secretKeyRef:
+                name: auth-service-pompeeva-secret
+                key: db_pass
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
