@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from app.core.service import AuthService
 from app.producer.producer import producer
 from app.schemas.schemas import AuthResponse, User
+from app.metrics import READINESS_STATE
 
 auth_router = APIRouter()
 UPLOAD_DIR = '/images'
@@ -52,10 +53,14 @@ async def authorize_user(user: User):
 async def health_check():
     """Проверка работоспособности сервиса."""
     if not await producer.health_check():
+        READINESS_STATE.labels(service='auth',
+                               status=status.HTTP_503_SERVICE_UNAVAILABLE).set(0)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail='Service unavailable',
         )
+    else:
+        READINESS_STATE.labels(service='auth', status=status.HTTP_200_OK).set(1)
 
 
 @auth_router.post('/api/verify', status_code=status.HTTP_200_OK)
