@@ -16,3 +16,6 @@ DB_PORT = os.environ.get('DB_PORT_POMPEEVA')
 DB_NAME = os.environ.get('DB_NAME_POMPEEVA')
 DB_USER = os.environ.get('DB_USER_POMPEEVA')
 DB_PASS = os.environ.get('DB_PASS_POMPEEVA')
+
+JAEGER_AGENT_HOST = os.environ.get('JAEGER_AGENT_HOST')
+JAEGER_AGENT_PORT = int(os.environ.get('JAEGER_AGENT_PORT'))  # type: ignore

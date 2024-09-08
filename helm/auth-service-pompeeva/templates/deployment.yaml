@@ -92,6 +92,16 @@ spec:
               secretKeyRef:
                 name: auth-service-pompeeva-secret
                 key: db_pass
+          - name: JAEGER_AGENT_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: jaeger_agent_host
+          - name: JAEGER_AGENT_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ .Chart.Name }}
+                key: jaeger_agent_port
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

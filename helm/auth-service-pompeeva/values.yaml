@@ -95,3 +95,5 @@ app:
     db_host: "postgres-service"
     db_port: "5432"
     db_name: "apompeeva"
+    jaeger_agent_host: "infra-jaeger-agent"
+    jaeger_agent_port: "6831"

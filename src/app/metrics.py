@@ -1,7 +1,6 @@
 from typing import Final
 
-from prometheus_client import Histogram, Counter, Gauge
-
+from prometheus_client import Counter, Gauge, Histogram
 
 SERVICE_PREFIX: Final[str] = 'pompeeva_auth'
 REQUEST_COUNT = Counter(
