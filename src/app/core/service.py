@@ -3,6 +3,7 @@ from dataclasses import asdict, dataclass
 
 import jwt
 from passlib.hash import pbkdf2_sha256
+from redis import Redis
 
 from app.config import EXPIRATION_TIME, SECRET  # type: ignore
 from app.crud.users_crud import create_new_user, get_user_by_login
@@ -56,16 +57,15 @@ class AuthService:
         return user is not None
 
     @classmethod
-    def is_token_exist(cls, user_id: int):
+    def is_token_exist(cls, user_id: int, redis: Redis):
         """Проверяет есть ли для юзера токен в хранилище."""
-        return user_id in cls.token_storage
+        token = cls.get_token(user_id, redis)
+        return token is not None
 
     @classmethod
-    def get_token(cls, user_id: int):
+    def get_token(cls, user_id: int, redis: Redis):
         """Возвращает токен по user_id."""
-        if user_id not in cls.token_storage:
-            return None
-        return cls.token_storage[user_id]
+        return redis.get(user_id)
 
     @staticmethod
     def is_token_expired(token: str):
@@ -75,6 +75,11 @@ class AuthService:
         except jwt.ExpiredSignatureError:
             return True
         return False
+
+    @staticmethod
+    def save_token(user_id: int, token: str, redis: Redis):
+        """Сохранение токена в redis."""
+        redis.set(user_id, token, ex=3600)
 
     @classmethod
     async def registrate_user(cls, login: str, password: str) -> str | None:
@@ -86,17 +91,17 @@ class AuthService:
             return None
 
         access_token = cls.create_token(login)
-        # to be deleted
-        user_id = len(cls.users) + 1
         new_user = User(login, pbkdf2_sha256.hash(password))
-        cls.users[login] = new_user
-        cls.users_by_id[user_id] = new_user
-        # ---
         await create_new_user(new_user.dict())
         return access_token
 
     @classmethod
-    async def authorize_user(cls, login: str, password: str) -> str | None:
+    async def authorize_user(
+        cls,
+        login: str,
+        password: str,
+        redis: Redis,
+    ) -> str | None:
         """Авторизация пользователя."""
         if not isinstance(login, str) or not isinstance(password, str):
             raise TypeError('String expected.')
@@ -105,12 +110,12 @@ class AuthService:
         current_user = await get_user_by_login(login)
         if not pbkdf2_sha256.verify(password, current_user.password):
             return None
-        if cls.is_token_exist(current_user.id):
-            token = cls.token_storage[current_user.id]
+        if cls.is_token_exist(current_user.id, redis):
+            token = cls.get_token(current_user.id, redis)
             if cls.is_token_expired(token):
                 token = cls.create_token(login)
                 cls.token_storage[current_user.id] = token
         else:
             token = cls.create_token(login)
-            cls.token_storage[current_user.id] = token
+            cls.save_token(current_user.id, token, redis)
         return token

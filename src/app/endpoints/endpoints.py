@@ -1,12 +1,14 @@
 import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from opentracing import global_tracer
+from redis import Redis
 
 from app.core.service import AuthService
 from app.metrics import READINESS_STATE
 from app.producer.producer import producer
+from app.redis import get_redis
 from app.schemas.schemas import AuthResponse, User
 
 auth_router = APIRouter()
@@ -14,16 +16,16 @@ UPLOAD_DIR = '/images'
 
 
 @auth_router.get('/check_token', status_code=status.HTTP_200_OK)
-async def check_token(user_id: int):
+async def check_token(user_id: int, redis: Redis = Depends(get_redis)):
     """Проверяет валидность токена для пользователя по id."""
     with global_tracer().start_active_span('check_token') as scope:
         scope.span.set_tag('user_id', user_id)
-        if not AuthService.is_token_exist(user_id):
+        if not AuthService.is_token_exist(user_id, redis):
             scope.span.set_tag('error', 'Token not exist')
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail='Token not exist',
             )
-        elif AuthService.is_token_expired(AuthService.get_token(user_id)):
+        elif AuthService.is_token_expired(AuthService.get_token(user_id, redis)):
             scope.span.set_tag('error', 'User unauthorized')
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail='User unauthorized',
@@ -47,11 +49,11 @@ async def register_user(user: User):
 
 
 @auth_router.post('/auth', status_code=status.HTTP_200_OK, response_model=AuthResponse)
-async def authorize_user(user: User):
+async def authorize_user(user: User, redis: Redis = Depends(get_redis)):
     """Авторизация пользователя."""
     with global_tracer().start_active_span('authorize_user') as scope:
         scope.span.set_tag('user_login', user.login)
-        token = await AuthService.authorize_user(user.login, user.password)
+        token = await AuthService.authorize_user(user.login, user.password, redis)
         if token is None:
             scope.span.set_tag('error', 'User not found')
             raise HTTPException(
